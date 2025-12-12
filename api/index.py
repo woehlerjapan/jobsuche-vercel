@@ -12,6 +12,19 @@ HEADERS = {
 }
 
 
+def _fetch(what, where, size, page):
+    params = {"page": page, "size": size}
+    if what:
+        params["was"] = what
+    if where:
+        params["wo"] = where
+    resp = requests.get(BASE_URL, headers=HEADERS, params=params, timeout=20)
+    resp.raise_for_status()
+    return resp.json()
+
+
+@app.get("/")
+@app.get("/api")
 @app.get("/jobs")
 @app.get("/api/jobs")
 def jobs(
@@ -20,18 +33,4 @@ def jobs(
     size: int = Query(10, ge=1, le=50),
     page: int = Query(1, ge=1, le=1000),
 ):
-    params = {"page": page, "size": size}
-    if what:
-        params["was"] = what
-    if where:
-        params["wo"] = where
-
-    resp = requests.get(BASE_URL, headers=HEADERS, params=params, timeout=20)
-    resp.raise_for_status()
-    return resp.json()
-
-
-@app.get("/", include_in_schema=False)
-@app.get("/api", include_in_schema=False)
-def root():
-    return {"status": "ok", "info": "Nutze /api/jobs"}
+    return _fetch(what, where, size, page)
