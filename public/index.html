@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jobsuche API Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    label { display: block; margin-top: 0.5rem; }
+    input { padding: 0.4rem; width: 240px; }
+    button { margin-top: 0.8rem; padding: 0.4rem 1rem; }
+    pre { background: #f6f6f6; padding: 1rem; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Arbeitsagentur Jobsuche</h1>
+  <label>Jobtitel <input id="what" placeholder="z.B. Entwickler" /></label>
+  <label>Ort <input id="where" placeholder="z.B. Berlin" /></label>
+  <label>Anzahl <input id="size" value="10" type="number" min="1" max="50" /></label>
+  <button onclick="search()">Suchen</button>
+  <pre id="out">Ergebnisse erscheinen hier …</pre>
+
+  <script>
+    async function search() {
+      const params = new URLSearchParams({
+        what: what.value,
+        where: where.value,
+        size: size.value || "10",
+      });
+      out.textContent = "Suche läuft …";
+      try {
+        const res = await fetch("/api/jobs?" + params.toString());
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        const lines = (data.stellenangebote || []).map((job) => {
+          const ort = job.arbeitsort?.ort || "Unbekannt";
+          return `Titel: ${job.titel}\nOrt: ${ort}\nArbeitgeber: ${job.arbeitgeber}\n-----`;
+        });
+        out.textContent = lines.length ? lines.join("\n") : "Keine Ergebnisse";
+      } catch (err) {
+        out.textContent = "Fehler: " + err;
+      }
+    }
+  </script>
+</body>
+</html>
